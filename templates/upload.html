@@ -1,0 +1,188 @@
+<!DOCTYPE HTML>
+<html lang="ru" xmlns="http://www.w3.org/1999/html">
+<head>
+    <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
+    <meta charset="utf-8">
+    <title>Визуализатор бюджетов</title>
+    <meta name="description" content="сервис визуализации местных бюджетов">
+
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <script src="//code.jquery.com/jquery-latest.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        {% if alert%}
+            <div class="alert alert-error">
+              <button type="button" class="close" data-dismiss="alert">&times;</button>
+              <strong>Ошибка!</strong> {{alert}}.
+            </div>
+        {%endif%}
+        <div class='span4'>
+            <h1>Визуализация бюджетов</h1>
+            <p>Вставьте в поле ниже буфер обмена из таблицы бюджета<br> И нажмите кнопку отправить</p>
+
+            <form method="post" action="/budget/1" >
+                <select id='region' name='region'>
+                    <option value=0>-выберите регион</option>
+                    {%for region in regions%}
+                        <option value={{region.id}}>{{region.title}}</option>
+                    {%endfor%}
+                </select>
+                <select id='raion' name='raion' disabled='true'></select>
+                <select id='municipality' name='municipality' disabled='true'></select>
+                <!--<input type='text' name='title' placeholder="Истра">-->
+                <input type="number" name="year" placeholder="2013" value="2013">
+                <input type='text' name='description' placeholder="необязательно">
+                <br>
+
+                <textarea  rows="10" cols="45" name='excel_table' id="excel_table"></textarea>
+                <br>
+                <button class="btn btn-large btn-primary" type="submit">Отправить</button>
+            </form>
+        </div><!-- /span4 -->
+        <div class='span8'>
+            <h1>Подготовка таблицы</h1>
+            <p>1. Скопируйте таблицу из файла бюджета</p>
+            <img src="/img/first_step.png" class="img-rounded">
+            <p>2. Вставьте её в Excel или бесплатный аналог. В файле могут быть пустые колонки,
+                но сумма должна идти шестой по счету, иногда встречаются колонки без смысла,
+                с одинаковыми значениями "001". Еще раз скопируйте</p>
+            <img src="/img/excel.png" class="img-rounded">
+            <p>3. <i class="icon-arrow-left"></i>Вставьте текст в поле слева и нажмите кнопку "отправить"</p>
+            <p>4. Profit <i class="icon-ok"></i></p>
+        </div><!-- /span4 -->
+    </div><!-- /row -->
+</div> <!-- /container -->
+
+</body>
+<script>
+    $(document).ready(function () {
+        /*
+         * На выборе селекта страны — вешаем событие,
+         * функция будет брать значение этого селекта
+         * и с помощью ajax запроса получать список
+         * регионов для вставки в следующий селект
+         */
+        $('#region').change(function () {
+            /*
+             * В переменную country_id положим значение селекта
+             * (выбранная страна)
+             */
+            var region = $(this).val();
+
+            /*
+             * Если значение селекта равно 0,
+             * т.е. не выбрана страна, то мы
+             * не будем ничего делать
+             */
+            if(region == '0'){
+                return
+            }
+            $('#raion').html('');
+            $('#raion').attr('disabled', true);
+            $('#municipality').html('');
+            $('#municipality').attr('disabled', true);
+
+            var url = 'json_get_territory_list'
+            $.get(
+                url,
+                "region=" + region,
+                function (result) {
+                    /*
+                     * В случае неудачи мы получим результат с type равным error.
+                     * Если все прошло успешно, то в type будет success,
+                     * а также массив regions, содержащий данные по регионам
+                     * в формате 'id'=>'1', 'title'=>'название региона'.
+                     */
+                    if (result.type == 'error') {
+                        /*
+                         * ошибка в запросе
+                         */
+                        alert('error');
+                        return(false);
+                    }
+                    else {
+                        /*
+                         * проходимся по пришедшему от бэк-энда массиву циклом
+                         */
+
+                        var options = "<option value='0'>-выберите район</option>";
+                        var jsonArray = result;
+                        $.each(jsonArray, function() {
+                            /*
+                             * и добавляем в селект по региону
+                             */
+                            options += '<option value='+this.id+'>' + this.title + '</option>';
+                        });
+                        $('#raion').html(options);
+                        $('#raion').attr('disabled', false);
+                    }
+                },
+                "json"
+            );
+
+        })
+
+        $('#raion').change(function () {
+            /*
+             * В переменную country_id положим значение селекта
+             * (выбранная страна)
+             */
+            var region = $('#region').val();
+            var raion = $(this).val();
+            /*
+             * Если значение селекта равно 0,
+             * т.е. не выбрана страна, то мы
+             * не будем ничего делать
+             */
+            if(raion == '0'){
+                return
+            }
+            $('#municipality').html('');
+            $('#municipality').attr('disabled', true);
+            var url = 'json_get_territory_list'
+            $.get(
+                url,
+                "region=" + region +
+                "&raion=" + raion,
+                function (result) {
+                    /*
+                     * В случае неудачи мы получим результат с type равным error.
+                     * Если все прошло успешно, то в type будет success,
+                     * а также массив regions, содержащий данные по регионам
+                     * в формате 'id'=>'1', 'title'=>'название региона'.
+                     */
+                    if (result.type == 'error') {
+                        /*
+                         * ошибка в запросе
+                         */
+                        alert('error');
+                        return(false);
+                    }
+                    else {
+                        /*
+                         * проходимся по пришедшему от бэк-энда массиву циклом
+                         */
+                        var options = "<option value='0'>-выберите поселение</option>";
+                        var jsonArray = result;
+                        $(jsonArray).each(function() {
+                            /*
+                             * и добавляем в селект по муниципалитету
+                             */
+                            options += '<option value='+this.id+'>' + this.title + '</option>';
+                        });
+                        $('#municipality').html(options);
+                        $('#municipality').attr('disabled', false);
+                    }
+                },
+                "json"
+            );
+
+        })
+
+
+    })
+</script>
+</html>

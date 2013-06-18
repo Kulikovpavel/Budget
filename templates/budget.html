@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html lang="ru" xmlns="http://www.w3.org/1999/html">
+<head>
+    <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
+    <meta charset="utf-8">
+    <title>Визуализатор бюджетов</title>
+    <meta name="description" content="сервис визуализации местных бюджетов">
+
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <script src="//code.jquery.com/jquery-latest.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container">
+
+    <h1>{{budget.title}} {{budget.year}}</h1>
+    <p>Получите<br>Распишитесь<br><a href = "/">На Главную страницу</a></p>
+
+    <div>
+      <label class="checkbox">
+        <input id='with_count' type="checkbox"> На человека (всего жителей - {{count}} человек)
+      </label>
+      <label class="checkbox">
+        <input id='with_sub' type="checkbox" checked> С учетом субсидий из бюджетов верхнего уровня
+      </label>
+      <button onclick="drawChart(0)">Общий вид</button>
+      <button onclick="drawChart(2)">Конкретные расходы</button>
+    </div>
+    <div id="chart_div" style="height: 900px;"></div>
+
+</div> <!-- /container -->
+
+
+
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(function(){drawChart(0)});
+      var type;
+      var level;
+      var chart;
+      function drawChart(type_input, owner_id) {
+        var data;
+        type = type_input;
+
+        if (type === 0 ){
+          level = {{zero_level|safe}};
+        }
+        else if (type === 1){
+            var url = '/json_get_subbudget'
+{#            jQuery.ajaxSetup({async:false});#}
+            $.get(
+                url,
+                "budget_id={{ budget.key().id() }}&owner_id=" + owner_id,
+                function (result) {
+                    if (result.type == 'error') {
+                        alert('error');
+                        return(false);
+                    }
+                    else {
+                        level = result;
+                    }
+                }
+            );
+
+
+
+        }
+        else{
+          level = {{end_level|safe}};
+        }
+        {# if not subvention#}
+        if(!$("#with_sub").prop("checked")){
+            for (var i=level.length-1; i>=0; i--) {
+                   level[i][1] = level[i][1]-level[i][2]
+            }
+        }
+        if($("#with_count").prop("checked")){
+            for (var i=level.length-1; i>=0; i--) {
+                   level[i][1] = level[i][1]/{{count}}
+            }
+        }
+        data = google.visualization.arrayToDataTable(level, true);
+
+        var options = {
+          title: '{{budget.title}} {{budget.year}} , цифры в тыс.р.'
+        };
+
+        chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+
+        function selectHandler() {
+            var selectedItem = chart.getSelection()[0];
+            if (selectedItem) {
+                var id = data.getValue(selectedItem.row, 3);
+{#                alert(id);#}
+                drawChart(1,id)
+            }
+
+        }
+        google.visualization.events.addListener(chart,'select',selectHandler);
+
+      }
+
+
+      $(':checkbox').change(function(){
+          drawChart(type);
+      });
+
+{#      google.visualization.event.addListener(chart, 'select', selectHandler);#}
+{#      chart.draw(level, options);#}
+
+  </script>
+{% include 'footer.html' %}
+</body>
+</html>

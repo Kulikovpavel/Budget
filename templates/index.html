@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html lang="ru" xmlns="http://www.w3.org/1999/html">
+<head>
+    <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
+    <meta charset="utf-8">
+    <title>Визуализатор бюджетов</title>
+    <meta name="description" content="сервис визуализации местных бюджетов">
+
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    {% include 'links.html' %}
+    <script src="//code.jquery.com/jquery-latest.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+<div class='well'>
+        <a href="/upload" class="btn btn-success">Загрузить бюджет <i class="icon-edit icon-white"></i></a>
+</div>
+<div class="container">
+    <div class="row">
+        <div class='span4 well'>
+            {% for budget in budgets%}
+                <p>
+                    <a href="/budget/{{budget.key().id()}}">{{budget.title}} {{budget.year}}</a> {{budget.description}}
+                </p>
+
+            {%endfor%}
+
+        </div><!-- /span4 -->
+        <div class='span4 well'>
+           <p><a href='/upload'>Загрузите</a> бюджет своего поселения или посмотрите загруженные</p>
+        </div><!-- /span4 -->
+
+    </div><!-- /row -->
+</div> <!-- /container -->
+{% include 'footer.html' %}
+</body>
+</html>
