@@ -4,6 +4,8 @@ runtime: python27
 api_version: 1
 threadsafe: yes
 
+
+
 handlers:
 - url: /favicon\.ico
   static_files: favicon.ico
@@ -17,13 +19,17 @@ handlers:
 - url: /admin/.*
   script: google.appengine.ext.admin.application
   login: admin
+- url: /add_regions  # for add regions
+  script: main.app
+  login: admin
 - url: .*
   script: main.app
 
-
+builtins:
+- remote_api: on
 
 libraries:
 - name: webapp2
-  version: "2.5.2"
+  version: latest
 - name: jinja2
   version: latest

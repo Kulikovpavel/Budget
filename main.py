@@ -8,8 +8,8 @@ import urllib
 import logging
 import json
 import random
-
-
+import admin
+from google.appengine.api.labs import taskqueue
 from helpers import *
 
 
@@ -76,7 +76,6 @@ class BudgetPageHandler(BudgetHandler):
 
     def post(self, id=0):
         excel_table = self.request.get('excel_table')
-        # title = self.request.get('title')
         year = int(self.request.get('year'))
         description = self.request.get('description')
 
@@ -101,7 +100,7 @@ class BudgetPageHandler(BudgetHandler):
         lines = excel_table.split('\n')
         table = [[word if word != "" else "0" for word in line.split('\t')] for line in lines if line != ""]
         if len(table) > 2 and len(table[0]) > 2:
-            budget = Budget.all().filter('region =', region).get()
+            budget = Budget.all().filter('region =', region).filter('year =', year).get()
             logging.warning(budget)
             if not budget:
                 budget = Budget(title=region.title,
@@ -109,6 +108,7 @@ class BudgetPageHandler(BudgetHandler):
                                 description=description,
                                 table=table,
                                 year=year,
+                                type='rashod',
                                 parent=main_key())
                 budget.put()
             db.delete(budget.budget_lines)
@@ -133,7 +133,7 @@ class BudgetPageHandler(BudgetHandler):
                                      vid=int(line[4]),
                                      total=get_float(line[5]),
                                      total_sub=get_float(line[6]),
-                                     # parent=budget)
+                                     # parent=budget
                                      )
             line_array.append(budget_line)
         db.put(line_array)
@@ -159,12 +159,7 @@ class JsonTerrytoryList(webapp2.RequestHandler):
         if region and not raion:
             region = Region.by_id(region)
         elif raion:
-
             region = Region.by_id(raion)
-            # if raion:
-            #         # muns = Region.all().ancestor(raion).order('title').filter('region_type = ', 'mun').fetch(1000)
-            #     muns = raion.childs
-            #     self.response.out.write(json.dumps([{'title': x.title, 'id': x.key().id()} for x in muns]))
         if region:
             childs = sorted(region.childs, key=lambda x: x.title)
             logging.warning(childs)
@@ -194,101 +189,19 @@ class JsonSubBudget(webapp2.RequestHandler):
         self.response.out.write(json.dumps(result))
 
 
-# class RegionsHandler(webapp2.RequestHandler):
+# class TaskHandler(webapp2.RequestHandler):
 #     def get(self):
-#         return
-#         year = 2012
-#         json_data = open('json/peoples.json')
-#         data = json.load(json_data)
-#
-#         q = db.GqlQuery("SELECT * FROM Region")
-#         results = q.fetch(1000)
-#         sum = 0
-#         while results:
-#             sum += len(results)
-#             db.delete(results)
-#             results = q.fetch(1000, len(results))
-#             logging.warning(sum)
-#         mun_array = []
-#         reg_count_array = []
-#         mun_count_array = []
-#         count = 0
+#         json_file = 'json/peoples.json'
+#         with open(json_file) as json_data:
+#             data = json.load(json_data)
 #         for key in data:
-#             region_data = data[key]
-#             # search = Region.all().filter('title =', key).ancestor(db.Key.from_path('regions', 'default')).fetch(1)
-#             # if len(search) == 1:
-#             #     region = search[0]
-#             # else:
-#             region = Region(title=key,
-#                             region_type='region',
-#                             # count=region_data['count'],
-#                             parent=db.Key.from_path('regions', 'default'))
-#             region.put()
-#
-#             reg_count = RegionCount(count=region_data['count'],
-#                                     year=year,
-#                                     region=region)
-#             reg_count_array.append(reg_count)
-#
-#             for key_region in region_data:
-#                 if key_region == 'count':
-#                     continue
-#                 raion_data = region_data[key_region]
-#                 # search = Region.all().filter('title =', key_region).ancestor(region).fetch(1)
-#                 # if len(search) == 1:
-#                 #     raion = search[0]
-#                 # else:
-#
-#                 raion = Region(title=key_region,
-#                                region_type='raion',
-#                                # count=raion_data['count'],
-#                                owner=region,
-#                                parent=db.Key.from_path('regions', 'default'))
-#                 raion.put()
-#
-#                 reg_count = RegionCount(count=raion_data['count'],
-#                                         year=year,
-#                                         region=raion)
-#                 reg_count_array.append(reg_count)
-#
-#                 for key_raion in raion_data:
-#                     if key_raion == 'count':
-#                         continue
-#                     mun_data = raion_data[key_raion]
-#                     # search = Region.all().filter('title =', key_raion).ancestor(raion).fetch(1)
-#                     # if len(search) == 1:
-#                     #     mun = search[0]
-#                     # else:
-#
-#                     mun = Region(title=key_raion,
-#                                  type='mun',
-#                                  # count=mun_data['count'],
-#                                  owner=raion,
-#                                  parent=db.Key.from_path('regions', 'default'))
-#                     # mun.put()
-#                     count += 1
-#                     logging.warning(count)
-#                     mun_array.append(mun)
-#                     mun_count_array.append(mun_data['count'])
-#
-#                     # logging.warning(mun)
-#
-#         # logging.warning(len(mun_array))
-#         db.put(mun_array)
-#         db.put(reg_count_array)
-#
-#         reg_count_array = []
-#         for i in range(len(mun_array)):
-#             reg_count = RegionCount(count=mun_count_array[i],
-#                                     year=year,
-#                                     region=mun_array[i])
-#
-#             reg_count_array.append(reg_count)
-#         db.put(reg_count_array)
+#             taskqueue.add(url='/add_regions', params={'key': key}, queue_name='load-regions-queue')
+#         self.redirect('/')
 
-
-
-
+class RegionsHandler(webapp2.RequestHandler):
+    def post(self):
+        key = self.request.get('key')
+        admin.load_regions(region_work=key)
 
 
 app = webapp2.WSGIApplication([
@@ -297,5 +210,6 @@ app = webapp2.WSGIApplication([
     ('/budget/(\d+)', BudgetPageHandler),
     ('/json_get_territory_list', JsonTerrytoryList),
     ('/json_get_subbudget', JsonSubBudget),
-    # ('/add_regions', RegionsHandler)
+    ('/add_regions', RegionsHandler),
+    # ('/add_task', TaskHandler),
 ], debug=True)

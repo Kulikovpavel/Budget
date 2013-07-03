@@ -22,6 +22,14 @@ indexes:
   - name: razdel
   - name: podrazdel
 
+- kind: BudgetLine
+  properties:
+  - name: budget
+  - name: razdel
+  - name: podrazdel
+  - name: statya
+  - name: vid
+
 - kind: Region
   properties:
   - name: owner

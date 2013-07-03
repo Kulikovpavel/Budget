@@ -65,9 +65,12 @@ class Region(db.Model):
     def by_id(cls, id):
         return Region.get_by_id(int(id), parent=db.Key.from_path('regions', 'default'))
 
-
     def count(self, year=2012):
         c = RegionCount.all().filter('region = ', self).filter('year = ', year).get()
+        if not c:
+            c = RegionCount.all().filter('region = ', self).filter('year = ', 2012).get()
+        if not c:
+            return 1
         return c.count
 
 class RegionCount(db.Model):
@@ -84,7 +87,7 @@ class Budget(db.Model):
     user = db.ReferenceProperty(User, collection_name='budgets')
     year = db.IntegerProperty()
     created = db.DateTimeProperty(auto_now_add=True)
-
+    type = db.StringProperty()
     @classmethod
     def by_id(cls, uid):
         return Budget.get_by_id(int(uid), parent=main_key())

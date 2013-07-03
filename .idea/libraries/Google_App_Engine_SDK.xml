@@ -28,12 +28,9 @@
       <root url="file://$PROJECT_DIR$/../../lib/setuptools-0.6c11" />
       <root url="file://$PROJECT_DIR$/../../lib/simplejson" />
       <root url="file://$PROJECT_DIR$/../../lib/sqlcmd" />
-      <root url="file://$PROJECT_DIR$/../../lib/webapp2" />
-      <root url="file://$PROJECT_DIR$/../../lib/webapp2-2.3" />
-      <root url="file://$PROJECT_DIR$/../../lib/webapp2-2.5.1" />
+      <root url="file://$PROJECT_DIR$/../../lib/django-1.5" />
       <root url="file://$PROJECT_DIR$/../../lib/webapp2-2.5.2" />
-      <root url="file://$PROJECT_DIR$/../../lib/webob_1_1_1" />
-      <root url="file://$PROJECT_DIR$/../../lib/yaml" />
+      <root url="file://$PROJECT_DIR$/../../lib/webob-1.2.3" />
       <root url="file://$PROJECT_DIR$/../../lib/yaml-3.10" />
     </CLASSES>
     <SOURCES />
