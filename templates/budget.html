@@ -9,6 +9,7 @@
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
     <script src="//code.jquery.com/jquery-latest.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+    <script src='/js/json-to-table.js'></script>
 </head>
 <body>
 <div class="container">
@@ -27,7 +28,7 @@
       <button onclick="drawChart(2)">Конкретные расходы</button>
     </div>
     <div id="chart_div" style="height: 900px;"></div>
-
+    <div id='lines_table'></div>
 </div> <!-- /container -->
 
 
@@ -39,16 +40,19 @@
       var type;
       var level;
       var chart;
+      var lines;
       function drawChart(type_input, owner_id) {
         var data;
         type = type_input;
 
         if (type === 0 ){
           level = {{zero_level|safe}};
+          var jsonHtmlTable = ConvertJsonToTable(level, 'jsonTable', null, 'Download');
+          $('#lines_table').html(jsonHtmlTable);
         }
         else if (type === 1){
             var url = '/json_get_subbudget'
-{#            jQuery.ajaxSetup({async:false});#}
+            jQuery.ajaxSetup({async:false});
             $.get(
                 url,
                 "budget_id={{ budget.key().id() }}&owner_id=" + owner_id,
@@ -58,7 +62,10 @@
                         return(false);
                     }
                     else {
-                        level = result;
+                        level = result.result;
+                        lines = result.sublines;
+                        var jsonHtmlTable = ConvertJsonToTable(lines, 'jsonTable', null, 'Download');
+                        $('#lines_table').html(jsonHtmlTable);
                     }
                 }
             );

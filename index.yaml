@@ -19,12 +19,27 @@ indexes:
 - kind: BudgetLine
   properties:
   - name: budget
-  - name: razdel
   - name: podrazdel
+  - name: razdel
 
 - kind: BudgetLine
+  ancestor: yes
   properties:
   - name: budget
+  - name: razdel
+  - name: podrazdel
+  - name: statya
+  - name: vid
+
+- kind: BudgetLine
+  ancestor: yes
+  properties:
+  - name: podrazdel
+  - name: razdel
+
+- kind: BudgetLine
+  ancestor: yes
+  properties:
   - name: razdel
   - name: podrazdel
   - name: statya

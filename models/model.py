@@ -92,6 +92,28 @@ class Budget(db.Model):
     def by_id(cls, uid):
         return Budget.get_by_id(int(uid), parent=main_key())
 
+    def create_budget_lines(self):
+        db.delete(self.budget_lines)
+        line_array = []
+        for line in self.table:
+            if len(line[0]) > 499:
+                title = line[0][:500]
+            else:
+                title = line[0]
+            budget_line = BudgetLine(budget=self,
+                                     title=title,
+                                     line_type='',
+                                     razdel=int(line[1]),
+                                     podrazdel=int(line[2]),
+                                     statya=int(line[3]),
+                                     vid=int(line[4]),
+                                     total=get_float(line[5]),
+                                     total_sub=get_float(line[6]),
+                                     parent=self
+                                     )
+            line_array.append(budget_line)
+        db.put(line_array)
+
 class BudgetLine(db.Model):
     budget = db.ReferenceProperty(Budget,  collection_name='budget_lines')
     title = db.StringProperty()
@@ -106,8 +128,8 @@ class BudgetLine(db.Model):
     total_complete_sub = db.FloatProperty()
 
     @classmethod
-    def by_id(cls, uid):
-        return BudgetLine.get_by_id(int(uid))
+    def by_id(cls, uid, budget):
+        return BudgetLine.get_by_id(int(uid), parent=budget)
 
 class Comment(db.Model):
     text = db.TextProperty()

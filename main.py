@@ -69,8 +69,10 @@ class BudgetPageHandler(BudgetHandler):
 
         self.template_values['budget'] = budget
         self.template_values['count'] = budget.region.count()
-        self.template_values['zero_level'] = self.zero_level(budget.budget_lines)
-        self.template_values['end_level'] = self.end_level(budget.table)
+        zero_level_lines = BudgetLine.all().filter('budget =', budget).filter('podrazdel = ', 0).order('razdel').fetch(1000)
+        self.template_values['zero_level'] = self.zero_level(zero_level_lines)
+        # self.template_values['end_level'] = self.end_level(budget.table)
+        self.template_values['end_level'] = []
         template = jinja_environment.get_template('budget.html')
         self.response.out.write(template.render(self.template_values))
 
@@ -111,32 +113,10 @@ class BudgetPageHandler(BudgetHandler):
                                 type='rashod',
                                 parent=main_key())
                 budget.put()
-            db.delete(budget.budget_lines)
-            self.create_budget_lines(budget, table)
+            budget.create_budget_lines()
             self.redirect("/budget/"+str(budget.key().id()))
         else:
             self.redirect('/upload?alert=""')
-
-    def create_budget_lines(self, budget, table):
-        line_array = []
-        for line in table:
-            if len(line[0]) > 499:
-                title = line[0][:500]
-            else:
-                title = line[0]
-            budget_line = BudgetLine(budget=budget,
-                                     title=title,
-                                     line_type='',
-                                     razdel=int(line[1]),
-                                     podrazdel=int(line[2]),
-                                     statya=int(line[3]),
-                                     vid=int(line[4]),
-                                     total=get_float(line[5]),
-                                     total_sub=get_float(line[6]),
-                                     # parent=budget
-                                     )
-            line_array.append(budget_line)
-        db.put(line_array)
 
 
 class UploadHandler(BudgetHandler):
@@ -174,29 +154,22 @@ class JsonSubBudget(webapp2.RequestHandler):
         budget = Budget.by_id(budget_id)
         if not budget:
             self.response.out.write('')
-        owner = BudgetLine.by_id(owner_id)
-        if not owner:
+        owner = BudgetLine.by_id(owner_id, budget)
+        if owner is None:
             self.response.out.write('')
-        sublines = BudgetLine.all().filter('budget = ', budget).filter('razdel = ', owner.razdel)\
-            .order('podrazdel').order('statya').order('vid').fetch(1500)
+        sublines = BudgetLine.all().ancestor(budget).filter('budget = ', budget).filter('razdel = ', owner.razdel).order('podrazdel').order('statya').order('vid').fetch(1500)
 
-        lines_count = sublines.count()
+        lines_count = len(sublines)
         result = []
         for i in range(lines_count-1):
-            if sublines[i].vid == 0 and sublines[i+1] != 0:  # last line where vid == 0 and next is something else
+            # logging.warning(sublines[i].title + sublines[i].vid)
+            if sublines[i].vid == 0 and sublines[i+1].vid != 0:  # last line where vid == 0 and next is something else
                 result.append(sublines[i])
         result = [budget_line(line) for line in result]
-        self.response.out.write(json.dumps(result))
 
+        result_dict = {'result': result, 'sublines': [budget_line(line) for line in sublines]}
+        self.response.out.write(json.dumps(result_dict))
 
-# class TaskHandler(webapp2.RequestHandler):
-#     def get(self):
-#         json_file = 'json/peoples.json'
-#         with open(json_file) as json_data:
-#             data = json.load(json_data)
-#         for key in data:
-#             taskqueue.add(url='/add_regions', params={'key': key}, queue_name='load-regions-queue')
-#         self.redirect('/')
 
 class RegionsHandler(webapp2.RequestHandler):
     def post(self):
@@ -210,6 +183,5 @@ app = webapp2.WSGIApplication([
     ('/budget/(\d+)', BudgetPageHandler),
     ('/json_get_territory_list', JsonTerrytoryList),
     ('/json_get_subbudget', JsonSubBudget),
-    ('/add_regions', RegionsHandler),
-    # ('/add_task', TaskHandler),
+    ('/add_regions', RegionsHandler)
 ], debug=True)
