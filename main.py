@@ -71,8 +71,10 @@ class BudgetPageHandler(BudgetHandler):
         self.template_values['count'] = budget.region.count()
         zero_level_lines = BudgetLine.all().filter('budget =', budget).filter('podrazdel = ', 0).order('razdel').fetch(1000)
         self.template_values['zero_level'] = self.zero_level(zero_level_lines)
+        self.template_values['lines'] = json.dumps([table_line(line) for line in zero_level_lines])
         # self.template_values['end_level'] = self.end_level(budget.table)
         self.template_values['end_level'] = []
+        self.template_values['table_headers'] = ["Наименование", "Раздел", "Подраздел", "Вид", "Статья", "Всего (тыс.р.)", "Субвенции (тыс.р.)"]
         template = jinja_environment.get_template('budget.html')
         self.response.out.write(template.render(self.template_values))
 
@@ -112,6 +114,9 @@ class BudgetPageHandler(BudgetHandler):
                                 year=year,
                                 type='rashod',
                                 parent=main_key())
+                budget.put()
+            else:
+                budget.table = table
                 budget.put()
             budget.create_budget_lines()
             self.redirect("/budget/"+str(budget.key().id()))
@@ -167,7 +172,7 @@ class JsonSubBudget(webapp2.RequestHandler):
                 result.append(sublines[i])
         result = [budget_line(line) for line in result]
 
-        result_dict = {'result': result, 'sublines': [budget_line(line) for line in sublines]}
+        result_dict = {'result': result, 'sublines': [table_line(line) for line in sublines]}
         self.response.out.write(json.dumps(result_dict))
 
 

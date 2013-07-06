@@ -25,7 +25,7 @@
         <input id='with_sub' type="checkbox" checked> С учетом субсидий из бюджетов верхнего уровня
       </label>
       <button onclick="drawChart(0)">Общий вид</button>
-      <button onclick="drawChart(2)">Конкретные расходы</button>
+{#      <button onclick="drawChart(2)">Конкретные расходы</button>#}
     </div>
     <div id="chart_div" style="height: 900px;"></div>
     <div id='lines_table'></div>
@@ -41,13 +41,16 @@
       var level;
       var chart;
       var lines;
+      var subbudget_flag = false;
       function drawChart(type_input, owner_id) {
         var data;
         type = type_input;
 
         if (type === 0 ){
+          subbudget_flag = false;
           level = {{zero_level|safe}};
-          var jsonHtmlTable = ConvertJsonToTable(level, 'jsonTable', null, 'Download');
+          lines = {{ lines|safe }};
+          var jsonHtmlTable = ConvertJsonToTable(lines, 'jsonTable', null, 'Download');
           $('#lines_table').html(jsonHtmlTable);
         }
         else if (type === 1){
@@ -62,10 +65,12 @@
                         return(false);
                     }
                     else {
+                        subbudget_flag = true;
                         level = result.result;
                         lines = result.sublines;
                         var jsonHtmlTable = ConvertJsonToTable(lines, 'jsonTable', null, 'Download');
-                        $('#lines_table').html(jsonHtmlTable);
+                        var warning = '<p>График может неправильно отражать распределение, ввиду сложности подразделов. Точное распределение смотрите в таблице ниже</p>'
+                        $('#lines_table').html(warning + jsonHtmlTable);
                     }
                 }
             );
@@ -98,10 +103,12 @@
 
         function selectHandler() {
             var selectedItem = chart.getSelection()[0];
-            if (selectedItem) {
+            if (selectedItem && !subbudget_flag) {
                 var id = data.getValue(selectedItem.row, 3);
-{#                alert(id);#}
-                drawChart(1,id)
+                drawChart(1,id);
+            }
+            else{
+                drawChart(0);
             }
 
         }

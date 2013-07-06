@@ -47,7 +47,7 @@ String.prototype.format = function()
  *  
  * @return string Converted JSON to HTML table
  */
-function ConvertJsonToTable(parsedJson, tableId, tableClassName, linkText)
+function ConvertJsonToTable(parsedJson, tableId, tableClassName, linkText, header_names)
 {
     //Patterns for links and NULL value
     var italic = '<i>{0}</i>';
@@ -87,7 +87,13 @@ function ConvertJsonToTable(parsedJson, tableId, tableClassName, linkText)
             // If JSON data is an object array, headers are automatically computed
             if(typeof(parsedJson[0]) == 'object')
             {
-                headers = array_keys(parsedJson[0]);
+                if (header_names){
+                    headers = header_names;
+
+                }
+                else{
+                    headers = array_keys(parsedJson[0]);
+                }
 
                 for (i = 0; i < headers.length; i++)
                     thCon += thRow.format(headers[i]);

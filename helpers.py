@@ -47,3 +47,6 @@ def get_float(str):
 
 def budget_line(line):
     return [line.title, line.total, line.total_sub,line.key().id()]
+
+def table_line(line):
+    return [line.title, line.razdel, line.podrazdel, line.statya, line.vid, line.total, line.total_sub]
