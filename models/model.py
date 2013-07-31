@@ -81,7 +81,7 @@ class RegionCount(db.Model):
 
 class Budget(db.Model):
     title = db.StringProperty()
-    description = db.TextProperty()
+    password = db.TextProperty()
     region = db.ReferenceProperty(Region, collection_name='budgets')
     table = JsonProperty()
     user = db.ReferenceProperty(User, collection_name='budgets')
@@ -100,15 +100,28 @@ class Budget(db.Model):
                 title = line[0][:500]
             else:
                 title = line[0]
+            # logging.warning(line)
+            razdel = int(get_float(line[1]))
+            podrazdel = int(get_float(line[2]))
+            statya = int(get_float(line[3]))
+            vid = int(get_float(line[4]))
+            total = get_float(line[5])
+            total_sub = get_float(line[6])
+            if razdel == 0:  # if empty - take razdels from previous line
+                razdel = budget_line.razdel
+                podrazdel = budget_line.podrazdel
+                # statya = budget_line.statya
+                # vid = 999  # other that "0"
+
             budget_line = BudgetLine(budget=self,
                                      title=title,
                                      line_type='',
-                                     razdel=int(line[1]),
-                                     podrazdel=int(line[2]),
-                                     statya=int(line[3]),
-                                     vid=int(line[4]),
-                                     total=get_float(line[5]),
-                                     total_sub=get_float(line[6]),
+                                     razdel=razdel,
+                                     podrazdel=podrazdel,
+                                     statya=statya,
+                                     vid=vid,
+                                     total=total,
+                                     total_sub=total_sub,
                                      parent=self
                                      )
             line_array.append(budget_line)

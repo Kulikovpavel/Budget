@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import logging
 import random
 from string import letters
 from google.appengine.ext import db
@@ -43,7 +44,10 @@ def main_key(name='default'):
 
 
 def get_float(str):
-    return float(str.replace(',', '.').replace(u'\xa0', '').replace(' ',''))
+    # logging.warning(str)
+    correct_str = str.replace(',', '.').replace(u'\xa0', '').replace(' ', '').replace('\n', '')  # remove all spaces and ,->.
+    # logging.warning(correct_str)
+    return float(correct_str)
 
 def budget_line(line):
     return [line.title, line.total, line.total_sub,line.key().id()]

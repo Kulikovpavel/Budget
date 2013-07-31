@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import webapp2
 import jinja2
 import urllib
@@ -9,9 +8,9 @@ import logging
 import json
 import random
 import admin
+import urllib
 from google.appengine.api.labs import taskqueue
 from helpers import *
-
 
 import sys  # models import
 sys.path.append('/models')
@@ -32,26 +31,27 @@ jinja_environment.filters['nl2br'] = nl2br
 
 
 class BudgetHandler(webapp2.RequestHandler):
+    def initialize(self, *a, **kw):
+        webapp2.RequestHandler.initialize(self, *a, **kw)
+        self.template_values = {}
+
     def zero_level(self, budget_lines):
         # zero_level = [[line[0], get_float(line[5])] for line in table if (line[2] == "" or int(line[2]) == 0)]
         zero_level = [budget_line(line) for line in budget_lines if line.podrazdel == 0]
         return json.dumps(zero_level)
 
-    def end_level(self, table):
-        table_len = len(table)
-        end_level = []
-        for line_index in xrange(table_len):
-            line = table[line_index]
-            if line_index < table_len - 1 and\
-                    (table[line_index+1][4] != "" or int(table[line_index+1][4]) != 0) and\
-                    (table[line_index][4] == "" or int(table[line_index][4]) == 0):
-                end_level.append([line[0], get_float(line[5]),0])
-        return json.dumps(end_level)
+    # def __end_level(self, table):
+    #     table_len = len(table)
+    #     end_level = []
+    #     for line_index in xrange(table_len):
+    #         line = table[line_index]
+    #         if line_index < table_len - 1 and\
+    #                 (table[line_index+1][4] != "" or int(table[line_index+1][4]) != 0) and\
+    #                 (table[line_index][4] == "" or int(table[line_index][4]) == 0):
+    #             end_level.append([line[0], get_float(line[5]),0])
+    #     return json.dumps(end_level)
 
-    def initialize(self, *a, **kw):
-        webapp2.RequestHandler.initialize(self, *a, **kw)
-        self.template_values = {
-        }
+
 
 
 class MainHandler(BudgetHandler):
@@ -81,13 +81,14 @@ class BudgetPageHandler(BudgetHandler):
     def post(self, id=0):
         excel_table = self.request.get('excel_table')
         year = int(self.request.get('year'))
-        description = self.request.get('description')
+        password = self.request.get('password')
 
         region = self.request.get('region')
         raion = self.request.get('raion')
         mun = self.request.get('municipality')
         if region == '0':
-            self.redirect('/upload?alert="Регион не выбран"')
+            self.upload_alert_redirect('Регион не выбран')
+            return
         region_id = None
         if mun and mun != '0':
             region_id = mun
@@ -96,34 +97,47 @@ class BudgetPageHandler(BudgetHandler):
         elif region and region != '0':
             region_id = region
         else:
-            self.redirect('/upload?alert="Выберите регион!"')
-
+            self.upload_alert_redirect('Выберите регион')
+            return
         region = Region.by_id(region_id)
         if not region:
-            self.redirect('/upload?alert="Регион не найден"')
+            self.upload_alert_redirect('Регион не найден')
+            return
+        excel_table = excel_table.replace('\r','')
         lines = excel_table.split('\n')
         table = [[word if word != "" else "0" for word in line.split('\t')] for line in lines if line != ""]
         if len(table) > 2 and len(table[0]) > 2:
             budget = Budget.all().filter('region =', region).filter('year =', year).get()
-            logging.warning(budget)
             if not budget:
                 budget = Budget(title=region.title,
                                 region=region,
-                                description=description,
+                                password=make_salt(15),  # random letters
                                 table=table,
                                 year=year,
                                 type='rashod',
                                 parent=main_key())
                 budget.put()
             else:
-                budget.table = table
-                budget.put()
+                # logging.warning('Current password - %s, budget - %s' % (password, budget.password))
+                if budget.password is None:
+                    budget.password = make_salt(15)
+                    budget.put()
+                if password == budget.password:
+                    budget.table = table
+                    budget.put()
+                else:
+                    logging.warning("Wrong password! " + str(budget.key().id()))
+                    self.upload_alert_redirect('Бюджет существует, введите пароль под кнопкой')
+                    return
             budget.create_budget_lines()
             self.redirect("/budget/"+str(budget.key().id()))
         else:
-            self.redirect('/upload?alert=""')
+            self.upload_alert_redirect('Таблица неверная')
 
-
+    def upload_alert_redirect(self, alert):
+        params = {'alert': alert}
+        encoded_params = urllib.urlencode(params)
+        self.redirect('/upload?'+encoded_params)
 class UploadHandler(BudgetHandler):
     def get(self):
         alert = self.request.get('alert')
