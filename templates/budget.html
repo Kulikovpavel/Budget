@@ -121,6 +121,9 @@
         };
 {#        alert(sum);#}
 {#        alert(correct_sum);#}
+        if (type === 0){  // for zero-level there is no error anyway, and sum is sum(array)
+            correct_sum = sum;
+        }
         var delta = Math.abs(sum - correct_sum) / correct_sum * 100;  // it can be wrong levels
         var delta_message = "";
         if (delta > 1 && type === 1){
