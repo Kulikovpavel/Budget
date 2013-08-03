@@ -195,6 +195,10 @@ class RegionsHandler(webapp2.RequestHandler):
         key = self.request.get('key')
         admin.load_regions(region_work=key)
 
+class ChangesHandler(webapp2.RequestHandler):
+    def get(self):
+        template = jinja_environment.get_template('changes.html')
+        self.response.out.write(template.render())
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
@@ -202,5 +206,6 @@ app = webapp2.WSGIApplication([
     ('/budget/(\d+)', BudgetPageHandler),
     ('/json_get_territory_list', JsonTerrytoryList),
     ('/json_get_subbudget', JsonSubBudget),
-    ('/add_regions', RegionsHandler)
+    ('/add_regions', RegionsHandler),
+    ('/changes', ChangesHandler)
 ], debug=True)

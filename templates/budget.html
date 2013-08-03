@@ -7,6 +7,7 @@
     <meta name="description" content=" {{budget.title}}, {{budget.year}}, бюджет, сервис визуализации местных бюджетов">
 
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <link href='/css/budget.css' rel="stylesheet">
     <script src="//code.jquery.com/jquery-latest.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
     <script src='/js/json-to-table.js'></script>
@@ -15,7 +16,11 @@
 <div class="container">
 
     <h1>{{budget.title}} {{budget.year}}</h1>
-    <p>По щелчку на элементе графика можно перейти к вложенному разделу бюджета<br><a href = "/">На Главную страницу</a></p>
+    <p>
+        По щелчку на элементе графика можно перейти к вложенному разделу бюджета. Под графиком - подробная таблица
+        <br>
+        <a href = "/">На Главную страницу</a>
+    </p>
 
     <div>
       <label class="checkbox">
@@ -28,7 +33,7 @@
 {#      <button onclick="drawChart(2)">Конкретные расходы</button>#}
     </div>
     <div id="chart_div" style="height: 900px;"></div>
-    <div id='lines_table'></div>
+    <div class='CSSTableGenerator' id='lines_table'></div>
 </div> <!-- /container -->
 
 
@@ -39,6 +44,7 @@
       google.setOnLoadCallback(function(){drawChart(0)});
       var type;
       var level;
+      var correct_level;
       var chart;
       var lines;
       var subbudget_flag = false;
@@ -54,48 +60,76 @@
           $('#lines_table').html(jsonHtmlTable);
         }
         else if (type === 1){
+            if (typeof owner_id !== 'undefined'){
             var url = '/json_get_subbudget'
-            jQuery.ajaxSetup({async:false});
-            $.get(
-                url,
-                "budget_id={{ budget.key().id() }}&owner_id=" + owner_id,
-                function (result) {
-                    if (result.type == 'error') {
-                        alert('error');
-                        return(false);
+                jQuery.ajaxSetup({async:false});
+                $.get(
+                    url,
+                    "budget_id={{ budget.key().id() }}&owner_id=" + owner_id,
+                    function (result) {
+                        if (result.type == 'error') {
+                            alert('error');
+                            return(false);
+                        }
+                        else {
+                            subbudget_flag = true;
+                            level = result.result;
+                            lines = result.sublines;
+                            correct_level = $.extend(true, [], result.result);  {# deep copy #}
+                            var jsonHtmlTable = ConvertJsonToTable(lines, 'jsonTable', null, 'Download');
+                            var warning = '<p>График подразделов может неправильно отражать распределение или общую сумму, ввиду сложности описания статей и подразделов. Точное распределение смотрите в таблице ниже</p>'
+                            $('#lines_table').html(warning + jsonHtmlTable);
+                        }
                     }
-                    else {
-                        subbudget_flag = true;
-                        level = result.result;
-                        lines = result.sublines;
-                        var jsonHtmlTable = ConvertJsonToTable(lines, 'jsonTable', null, 'Download');
-                        var warning = '<p>График может неправильно отражать распределение, ввиду сложности подразделов. Точное распределение смотрите в таблице ниже</p>'
-                        $('#lines_table').html(warning + jsonHtmlTable);
-                    }
-                }
-            );
+                );
+            }
+            else{
 
-
-
+                level = $.extend(true, [], correct_level);  {# deep copy #}
+            }
         }
         else{
           level = {{end_level|safe}};
         }
+        $('#lines_table table thead tr').html('<th>Наименование</th><th>Раздел</th><th>Подраздел</th><th>Статья</th><th>Вид</th><th>Всего в тыс. р.</th><th>Из них субвенции</th>');
         {# if not subvention#}
+        var correct_sum = lines[0][5];
         if(!$("#with_sub").prop("checked")){
             for (var i=level.length-1; i>=0; i--) {
                    level[i][1] = level[i][1]-level[i][2]
             }
+            correct_sum = lines[0][5] - lines[0][6];
         }
         if($("#with_count").prop("checked")){
-            for (var i=level.length-1; i>=0; i--) {
-                   level[i][1] = level[i][1]/{{count}}
+            var _round = Math.round;
+            Math.round = function(number, decimals /* optional, default 0 */)
+            {
+              if (arguments.length == 1)
+                return _round(number);
+
+              var multiplier = Math.pow(10, decimals);
+              return _round(number * multiplier) / multiplier;
             }
+            for (var i=level.length-1; i>=0; i--) {
+                   level[i][1] = Math.round( level[i][1]/{{count}}, 4);
+            }
+            correct_sum /= {{ count }}
+        }
+        var sum = 0;
+          for (var i=level.length-1; i>=0; i--) {
+               sum += level[i][1];
+        };
+{#        alert(sum);#}
+{#        alert(correct_sum);#}
+        var delta = Math.abs(sum - correct_sum) / correct_sum * 100;  // it can be wrong levels
+        var delta_message = "";
+        if (delta > 1 && type === 1){
+              delta_message = ". Ошибка графика " + delta.toFixed() + "%"
         }
         data = google.visualization.arrayToDataTable(level, true);
 
         var options = {
-          title: '{{budget.title}} {{budget.year}} , цифры в тыс.р.'
+          title: '{{budget.title}} {{budget.year}} , расходы бюджета, цифры в тыс.р., общие расходы: ' + correct_sum.toFixed(2) + delta_message
         };
 
         chart = new google.visualization.PieChart(document.getElementById('chart_div'));
