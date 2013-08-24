@@ -57,20 +57,25 @@ class BudgetHandler(webapp2.RequestHandler):
                    "Физическая культура и спорт",
                    "Средства массовой информации",
                    "Обслуживание государственного и муниципального долга",
-                   "Межбюджетные трансферты бюджетам субъектов Российской Федерации и муниципальных образований общего характера"]
+                   "Межбюджетные трансферты бюджетам субъектов Российской Федерации и муниципальных образований общего характера",
+                   "Численность населения"]
 
         for i in range(len(razdels)):
+            last_elem = i == len(razdels) - 1  # true if last element - for count
             razdel_num = i + 1
             chart_line = [] + [razdels[i]]
             for budget in budgets:
-                budget_line = BudgetLine.all().filter('budget =', budget).filter('razdel =', razdel_num).filter('podrazdel =', 0).get()
-                if budget_line is None:
-                    total = 0
-                    sub = 0
+                if last_elem:
+                    total = budget.region.count(budget.year)
                 else:
-                    total = budget_line.total
-                    sub = budget_line.total_sub  # subvention
-                # chart_line.append([total, sub])
+                    budget_line = BudgetLine.all().filter('budget =', budget).filter('razdel =', razdel_num).filter('podrazdel =', 0).get()
+                    if budget_line is None:
+                        total = 0
+                        sub = 0
+                    else:
+                        total = budget_line.total
+                        sub = budget_line.total_sub  # subvention
+                    # chart_line.append([total, sub])
                 chart_line.append(total)
             result.append(chart_line)
         return json.dumps(result), json.dumps(count_list)
