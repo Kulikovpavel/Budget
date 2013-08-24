@@ -36,28 +36,51 @@ class BudgetHandler(webapp2.RequestHandler):
         self.template_values = {}
 
     def zero_level(self, budget_lines):
-        # zero_level = [[line[0], get_float(line[5])] for line in table if (line[2] == "" or int(line[2]) == 0)]
         zero_level = [budget_line(line) for line in budget_lines if line.podrazdel == 0]
         return json.dumps(zero_level)
 
-    # def __end_level(self, table):
-    #     table_len = len(table)
-    #     end_level = []
-    #     for line_index in xrange(table_len):
-    #         line = table[line_index]
-    #         if line_index < table_len - 1 and\
-    #                 (table[line_index+1][4] != "" or int(table[line_index+1][4]) != 0) and\
-    #                 (table[line_index][4] == "" or int(table[line_index][4]) == 0):
-    #             end_level.append([line[0], get_float(line[5]),0])
-    #     return json.dumps(end_level)
+    def chart_data(self, budgets):
+        names_list = [line.title+" "+str(line.year) for line in budgets]
+        count_list = [budget.region.count(budget.year) for budget in budgets]
+        first_line = ["Раздел"] + names_list
+        result = [] + [first_line]
+        razdels = ["Общегосударственные вопросы",
+                   "Национальная оборона",
+                   "Национальная безопасность и правоохранительная деятельность",
+                   "Национальная экономика",
+                   "Жилищно-коммунальное хозяйство",
+                   "Охрана окружающей среды",
+                   "Образование",
+                   "Культура и кинематография",
+                   "Здравоохранение",
+                   "Социальная политика",
+                   "Физическая культура и спорт",
+                   "Средства массовой информации",
+                   "Обслуживание государственного и муниципального долга",
+                   "Межбюджетные трансферты бюджетам субъектов Российской Федерации и муниципальных образований общего характера"]
 
-
+        for i in range(len(razdels)):
+            razdel_num = i + 1
+            chart_line = [] + [razdels[i]]
+            for budget in budgets:
+                budget_line = BudgetLine.all().filter('budget =', budget).filter('razdel =', razdel_num).filter('podrazdel =', 0).get()
+                if budget_line is None:
+                    total = 0
+                    sub = 0
+                else:
+                    total = budget_line.total
+                    sub = budget_line.total_sub  # subvention
+                # chart_line.append([total, sub])
+                chart_line.append(total)
+            result.append(chart_line)
+        return json.dumps(result), json.dumps(count_list)
 
 
 class MainHandler(BudgetHandler):
     def get(self):
         budgets = Budget.all().ancestor(main_key()).order('-created').fetch(300)
         self.template_values['budgets'] = budgets
+        self.template_values['chart_data'], self.template_values['count_list'] = self.chart_data(budgets)
         template = jinja_environment.get_template('index.html')
         self.response.out.write(template.render(self.template_values))
 
@@ -68,7 +91,7 @@ class BudgetPageHandler(BudgetHandler):
         budget = Budget.by_id(id)
 
         self.template_values['budget'] = budget
-        self.template_values['count'] = budget.region.count()
+        self.template_values['count'] = budget.region.count(budget.year)
         zero_level_lines = BudgetLine.all().filter('budget =', budget).filter('podrazdel = ', 0).order('razdel').fetch(1000)
         self.template_values['zero_level'] = self.zero_level(zero_level_lines)
         self.template_values['lines'] = json.dumps([table_line(line) for line in zero_level_lines])

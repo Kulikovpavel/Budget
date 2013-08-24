@@ -14,9 +14,21 @@
 </head>
 <body>
 <div class='well'>
-        <a href="/upload" class="btn btn-success">Загрузить бюджет <i class="icon-edit icon-white"></i></a>
+    <div>
+      <label class="checkbox">
+        <input id='with_count' type="checkbox"> На человека (всего жителей - {{count}} человек)
+      </label>
+      <label class="checkbox">
+        <input id='with_sub' type="checkbox" checked> С учетом субсидий из бюджетов верхнего уровня
+      </label>
+    </div>
+    <div class='row' id="dashboard">
+        <div class='span12' id='chart_div'></div>
+        <div class='span2' id="control_row"></div>
+    </div>
 </div>
 <div class="container">
+    <div></div>
     <div class="row">
         <div class='span4 well'>
             {% for budget in budgets%}
@@ -33,6 +45,65 @@
 
     </div><!-- /row -->
 </div> <!-- /container -->
+<div class='well'>
+        <a href="/upload" class="btn btn-success">Загрузить бюджет <i class="icon-edit icon-white"></i></a>
+</div>
 {% include 'footer.html' %}
 </body>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load("visualization", "1.1", {packages:["controls"]});
+    google.setOnLoadCallback(function(){drawChart()});
+
+    function drawChart() {
+      // Create and populate the data table.
+      var array = {{ chart_data|safe }};
+{#      var copy_array = $.extend(true, [], array);  {# deep copy #}
+
+      var data = google.visualization.arrayToDataTable(array);
+
+{#              google.visualization.arrayToDataTable([#}
+{#        ['Month', 'Bolivia', 'Ecuador', 'Madagascar', 'Papua New Guinea', 'Rwanda', 'Average'],#}
+{#        ['2004/05',  165,      938,         522,             998,           450,      614.6],#}
+{#        ['2005/06',  135,      1120,        599,             1268,          288,      682],#}
+{#        ['2006/07',  157,      1167,        587,             807,           397,      623],#}
+{#        ['2007/08',  139,      1110,        615,             968,           215,      609.4],#}
+{#        ['2008/09',  136,      691,         629,             1026,          366,      569.6]#}
+{#      ]);#}
+
+      var categoryPicker = new google.visualization.ControlWrapper({
+        'controlType': 'CategoryFilter',
+        'containerId': 'control_row',
+        'options': {
+          'filterColumnLabel': 'Раздел',
+          'ui': {
+            'allowTyping': false,
+            'allowMultiple': true,
+            'selectedValuesLayout': 'belowStacked'
+          }
+        },
+        // Define an initial state, i.e. a set of metrics to be initially selected.
+        'state': {'selectedValues': ['Общегосударственные вопросы']}
+      });
+
+
+      // Create and draw the visualization.
+      //var ac = new google.visualization.ComboChart(document.getElementById('chart_div'));
+      var combochart = new google.visualization.ChartWrapper({
+        'chartType': 'ComboChart',
+        'containerId': 'chart_div',
+        options: {
+            height: 1000,
+            vAxis: {title: "Расходы, тыс. р."},
+            hAxis: {title: "Разделы бюджета"},
+            seriesType: "bars"
+        }
+      });
+
+      // Create the dashboard.
+      var dashboard = new google.visualization.Dashboard(document.getElementById('dashboard')).
+        bind(categoryPicker, combochart).  // Configure the category picker to affect the chart
+        draw(data);  // Draw the dashboard
+}
+</script>
 </html>
