@@ -1,6 +1,7 @@
 from google.appengine.ext import db
 import json
 from helpers import *
+import logging
 
 
 class JsonProperty(db.TextProperty):
@@ -51,6 +52,7 @@ class User(db.Model):
         if u and valid_pw(email, pw, u.pw_hash):
             return u
 
+
 class Region(db.Model):
     title = db.StringProperty()
     region_type = db.StringProperty()
@@ -73,6 +75,7 @@ class Region(db.Model):
             return 1
         return c.count
 
+
 class RegionCount(db.Model):
     count = db.IntegerProperty()
     year = db.IntegerProperty()
@@ -88,6 +91,7 @@ class Budget(db.Model):
     year = db.IntegerProperty()
     created = db.DateTimeProperty(auto_now_add=True)
     type = db.StringProperty()
+
     @classmethod
     def by_id(cls, uid):
         return Budget.get_by_id(int(uid), parent=main_key())
@@ -95,18 +99,25 @@ class Budget(db.Model):
     def create_budget_lines(self):
         db.delete(self.budget_lines)
         line_array = []
+        count = 0
         for line in self.table:
+            count += 1
             if len(line[0]) > 499:
                 title = line[0][:500]
             else:
                 title = line[0]
-            # logging.warning(line)
-            razdel = int(get_float(line[1]))
-            podrazdel = int(get_float(line[2]))
-            statya = int(get_float(line[3]))
-            vid = int(get_float(line[4]))
-            total = get_float(line[5])
-            total_sub = get_float(line[6])
+
+            try:
+                razdel = int(get_float(line[1]))
+                podrazdel = int(get_float(line[2]))
+                statya = int(get_float(line[3]))
+                vid = int(get_float(line[4]))
+                total = get_float(line[5])
+                total_sub = get_float(line[6])
+            except:
+                logging.exception("error in line: %s, %s" % (count, line))
+                return
+
             if razdel == 0:  # if empty - take razdels from previous line
                 razdel = budget_line.razdel
                 podrazdel = budget_line.podrazdel
@@ -127,6 +138,7 @@ class Budget(db.Model):
             line_array.append(budget_line)
         db.put(line_array)
 
+
 class BudgetLine(db.Model):
     budget = db.ReferenceProperty(Budget,  collection_name='budget_lines')
     title = db.StringProperty()
@@ -143,6 +155,7 @@ class BudgetLine(db.Model):
     @classmethod
     def by_id(cls, uid, budget):
         return BudgetLine.get_by_id(int(uid), parent=budget)
+
 
 class Comment(db.Model):
     text = db.TextProperty()
