@@ -9,6 +9,7 @@ import json
 import random
 import admin
 import urllib
+import zlib
 from google.appengine.api.labs import taskqueue
 from helpers import *
 
@@ -157,7 +158,7 @@ class BudgetPageHandler(BudgetHandler):
                     logging.warning("Wrong password! " + str(budget.key().id()))
                     self.upload_alert_redirect('Бюджет существует, введите пароль под кнопкой')
                     return
-            budget.create_budget_lines()
+            budget.create_budget_lines(table)
             self.redirect("/budget/"+str(budget.key().id()))
         else:
             self.upload_alert_redirect('Таблица неверная')

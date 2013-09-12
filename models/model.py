@@ -4,6 +4,7 @@ from helpers import *
 import logging
 
 
+
 class JsonProperty(db.TextProperty):
     def validate(self, value):
         return value
@@ -42,9 +43,9 @@ class User(db.Model):
     def register(cls, name, email, pw ):
         pw_hash = make_pw_hash(email, pw)
         return User(parent = users_key(),
-            name = name,
-            pw_hash = pw_hash,
-            email = email)
+                    name = name,
+                    pw_hash = pw_hash,
+                    email = email)
 
     @classmethod
     def login(cls, email, pw):
@@ -96,11 +97,13 @@ class Budget(db.Model):
     def by_id(cls, uid):
         return Budget.get_by_id(int(uid), parent=main_key())
 
-    def create_budget_lines(self):
+    def create_budget_lines(self, table=None):
         db.delete(self.budget_lines)
         line_array = []
         count = 0
-        for line in self.table:
+        if table is None:
+            table = self.table
+        for line in table:
             count += 1
             if len(line[0]) > 499:
                 title = line[0][:500]
