@@ -6,11 +6,7 @@ import jinja2
 import urllib
 import logging
 import json
-import random
 import admin
-import urllib
-import zlib
-from google.appengine.api.labs import taskqueue
 from helpers import *
 
 import sys  # models import
@@ -167,6 +163,8 @@ class BudgetPageHandler(BudgetHandler):
         params = {'alert': alert}
         encoded_params = urllib.urlencode(params)
         self.redirect('/upload?'+encoded_params)
+
+
 class UploadHandler(BudgetHandler):
     def get(self):
         alert = self.request.get('alert')

@@ -4,6 +4,7 @@ from google.appengine.ext import db
 import logging
 from models import *
 
+
 def add_tasks_regions():
     json_file = 'json/peoples.json'
     with open(json_file) as json_data:
@@ -11,29 +12,12 @@ def add_tasks_regions():
     for key in data:
         taskqueue.add(url='/add_regions', params={'key': key}, queue_name='load-regions-queue')
 
+
 def load_regions(year=2012, json_file='json/peoples.json',region_work=''):
     logging.warning("LOAD REGIONS START as %s" % region_work)
 
     with open(json_file) as json_data:
         data = json.load(json_data)
-
-    # q = db.GqlQuery("SELECT * FROM RegionCount where year=%s" % year)
-    # results = q.fetch(1000)
-    # sum = 0
-    # while results:
-    #     sum += len(results)
-    #     db.delete(results)
-    #     results = q.fetch(1000, len(results))
-    #     logging.warning(sum)
-    #
-    # q = db.GqlQuery("SELECT * FROM Region")
-    # results = q.fetch(1000)
-    # sum = 0
-    # while results:
-    #     sum += len(results)
-    #     db.delete(results)
-    #     results = q.fetch(1000, len(results))
-    #     logging.warning(sum)
 
     mun_array = []
     reg_count_array = []
@@ -83,8 +67,6 @@ def load_regions(year=2012, json_file='json/peoples.json',region_work=''):
                 mun_array.append(mun)
                 mun_count_array.append(mun_data['count'])
         logging.warning(count)
-        # if count>2000:
-        #     break
 
     put_array(mun_array)
     put_array(reg_count_array)
@@ -143,7 +125,6 @@ def load_counts(year=2012, json_file='json/peoples.json'):
                 logging.warning('raion %s not found' % key_region)
             else:
                 reg_count_save(year, raion, raion_data['count'], reg_count_array)
-
 
             for key_raion in raion_data:
                 if key_raion == 'count':

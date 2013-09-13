@@ -5,10 +5,10 @@ import random
 from string import letters
 from google.appengine.ext import db
 
-secret = 'far654654dsfsfdt'
+secret = 'far654654dsfiuoiuisfdt'
 
 
-def make_salt(length = 5):
+def make_salt(length=5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
 
@@ -49,8 +49,10 @@ def get_float(str):
     # logging.warning(correct_str)
     return float(correct_str)
 
+
 def budget_line(line):
     return [line.title, line.total, line.total_sub,line.key().id()]
+
 
 def table_line(line):
     return [line.title, line.razdel, line.podrazdel, line.statya, line.vid, line.total, line.total_sub]

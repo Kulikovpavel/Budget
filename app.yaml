@@ -5,7 +5,6 @@ api_version: 1
 threadsafe: yes
 
 
-
 handlers:
 - url: /favicon\.ico
   static_files: favicon.ico
@@ -16,19 +15,19 @@ handlers:
   static_dir: js
 - url: /css
   static_dir: css
-#- url: /json
-#  static_dir: json
 - url: /admin/.*
   script: google.appengine.ext.admin.application
   login: admin
-- url: /add_regions  # for add regions
+- url: /add_regions  # for add regions and count
   script: main.app
   login: admin
 - url: .*
   script: main.app
 
+
 builtins:
 - remote_api: on
+
 
 libraries:
 - name: webapp2

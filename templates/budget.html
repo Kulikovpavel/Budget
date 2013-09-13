@@ -30,7 +30,6 @@
         <input id='with_sub' type="checkbox" checked> С учетом субсидий из бюджетов верхнего уровня
       </label>
       <button onclick="drawChart(0)">Общий вид</button>
-{#      <button onclick="drawChart(2)">Конкретные расходы</button>#}
     </div>
     <div id="chart_div" style="height: 900px;"></div>
     <div class='CSSTableGenerator' id='lines_table'></div>
@@ -84,7 +83,6 @@
                 );
             }
             else{
-
                 level = $.extend(true, [], correct_level);  {# deep copy #}
             }
         }
@@ -152,7 +150,6 @@
         google.visualization.events.addListener(chart,'select',selectHandler);
 
       }
-
 
       $(':checkbox').change(function(){
           drawChart(type);
