@@ -1,7 +1,8 @@
 Budget visualization
 ==============
 
-Tool for visualization of budgets of the Russian municipal
+Tool for visualization of budgets of the Russian municipal.
+
 Work on Google App Engine here:
 
 http://budget.istra-da.ru
