@@ -1,4 +1,4 @@
-Budget visualisation
+Budget visualization
 ==============
 
 Tool for visualization of budgets of the Russian municipal
