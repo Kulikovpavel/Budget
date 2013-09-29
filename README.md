@@ -1,6 +1,7 @@
 http://budget.istra-da.ru
 
 License
+------------
 
 The MIT License (MIT)
 
