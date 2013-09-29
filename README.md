@@ -4,7 +4,8 @@ Budget visualization
 Tool for visualization of budgets of the Russian municipalities.
 
 Work on Google App Engine here: http://budget.istra-da.ru
-Made with Google Charts https://developers.google.com/chart/
+
+Made with Google Charts: https://developers.google.com/chart/
 
 
 License
