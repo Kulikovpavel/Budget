@@ -4,7 +4,6 @@ from helpers import *
 import logging
 
 
-
 class JsonProperty(db.TextProperty):
     def validate(self, value):
         return value
@@ -23,9 +22,9 @@ class JsonProperty(db.TextProperty):
 
 
 class User(db.Model):
-    name = db.StringProperty(required = True)
-    pw_hash = db.StringProperty(required = True)
-    email = db.StringProperty(required = True)
+    name = db.StringProperty(required=True)
+    pw_hash = db.StringProperty(required=True)
+    email = db.StringProperty(required=True)
 
     @classmethod
     def by_id(cls, uid):
@@ -35,17 +34,19 @@ class User(db.Model):
     def by_name(cls, name):
         u = User.all().filter('name =', name).get()
         return u
+
     @classmethod
     def by_email(cls, email):
         u = User.all().filter('email =', email).get()
         return u
+
     @classmethod
-    def register(cls, name, email, pw ):
+    def register(cls, name, email, pw):
         pw_hash = make_pw_hash(email, pw)
-        return User(parent = users_key(),
-                    name = name,
-                    pw_hash = pw_hash,
-                    email = email)
+        return User(parent=users_key(),
+                    name=name,
+                    pw_hash=pw_hash,
+                    email=email)
 
     @classmethod
     def login(cls, email, pw):
@@ -65,8 +66,8 @@ class Region(db.Model):
         return r
 
     @classmethod
-    def by_id(cls, id):
-        return Region.get_by_id(int(id), parent=db.Key.from_path('regions', 'default'))
+    def by_id(cls, elem_id):
+        return Region.get_by_id(int(elem_id), parent=db.Key.from_path('regions', 'default'))
 
     def count(self, year=2012):
         c = RegionCount.all().filter('region = ', self).filter('year = ', year).get()
@@ -92,12 +93,13 @@ class Budget(db.Model):
     year = db.IntegerProperty()
     created = db.DateTimeProperty(auto_now_add=True)
     type = db.StringProperty()
+    link = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
         return Budget.get_by_id(int(uid), parent=main_key())
 
-    def create_budget_lines(self, table=None):
+    def create_budget_lines(self, table=None):  # for big tables, if none - from self.table, else - from parameter
         db.delete(self.budget_lines)
         line_array = []
         count = 0
@@ -118,7 +120,7 @@ class Budget(db.Model):
                 total = get_float(line[5])
                 total_sub = get_float(line[6])
             except:
-                logging.exception("error in line: %s, %s" % (count, line))
+                logging.exception("error in line: %s, %s" % (count, line[0]))
                 return
 
             if razdel == 0:  # if empty - take razdels from previous line

@@ -105,6 +105,7 @@ class BudgetPageHandler(BudgetHandler):
 
     def post(self, id=0):
         excel_table = self.request.get('excel_table')
+        link = self.request.get('link')
         year = int(self.request.get('year'))
         password = self.request.get('password')
 
@@ -140,6 +141,7 @@ class BudgetPageHandler(BudgetHandler):
                                 table=table,
                                 year=year,
                                 type='rashod',
+                                link=link,
                                 parent=main_key())
                 budget.put()
             else:

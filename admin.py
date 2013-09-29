@@ -13,7 +13,7 @@ def add_tasks_regions():
         taskqueue.add(url='/add_regions', params={'key': key}, queue_name='load-regions-queue')
 
 
-def load_regions(year=2012, json_file='json/peoples.json',region_work=''):
+def load_regions(year=2012, json_file='json/peoples.json', region_work=''):
     logging.warning("LOAD REGIONS START as %s" % region_work)
 
     with open(json_file) as json_data:
@@ -81,7 +81,7 @@ def load_regions(year=2012, json_file='json/peoples.json',region_work=''):
 
 
 def reg_count_save(year, region, count, reg_count_array):  # puts count in count entities list
-    reg_count = db.GqlQuery("SELECT * FROM RegionCount where year=%s and region=%s" % year,region)
+    reg_count = db.GqlQuery("SELECT * FROM RegionCount where year=%s and region=%s" % year, region)
     if not reg_count:
         reg_count = RegionCount(count=count,
                                 year=year,
@@ -136,7 +136,7 @@ def load_counts(year=2012, json_file='json/peoples.json'):
                 else:
                     reg_count_save(year, mun, mun_data['count'], reg_count_array)
                     count += 1
-        logging.warning("count = %s" %count)
+        logging.warning("count = %s" % count)
     put_array(reg_count_array)
 
 

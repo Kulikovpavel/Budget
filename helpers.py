@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-import logging
 import random
 from string import letters
 from google.appengine.ext import db
@@ -9,10 +8,10 @@ secret = 'far654654dsfiuoiuisfdt'
 
 
 def make_salt(length=5):
-    return ''.join(random.choice(letters) for x in xrange(length))
+    return ''.join(random.choice(letters) for _ in xrange(length))
 
 
-def make_pw_hash(email, pw, salt = None):
+def make_pw_hash(email, pw, salt=None):
     if not salt:
         salt = make_salt()
     h = hashlib.sha256(email + pw + salt).hexdigest()
@@ -24,7 +23,7 @@ def valid_pw(email, password, h):
     return h == make_pw_hash(email, password, salt)
 
 
-def users_key(group = 'default'):
+def users_key(group='default'):
     return db.Key.from_path('users', group)
 
 
@@ -43,15 +42,13 @@ def main_key(name='default'):
     return db.Key.from_path('budgets', name)
 
 
-def get_float(str):
-    # logging.warning(str)
-    correct_str = str.replace(',', '.').replace(u'\xa0', '').replace(' ', '').replace('\n', '')  # remove all spaces and ,->.
-    # logging.warning(correct_str)
+def get_float(string):  # remove all spaces and ,->.
+    correct_str = string.replace(',', '.').replace(u'\xa0', '').replace(' ', '').replace('\n', '')
     return float(correct_str)
 
 
 def budget_line(line):
-    return [line.title, line.total, line.total_sub,line.key().id()]
+    return [line.title, line.total, line.total_sub, line.key().id()]
 
 
 def table_line(line):
