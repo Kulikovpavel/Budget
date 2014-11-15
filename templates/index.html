@@ -43,7 +43,7 @@
 <div class="container">
     <div></div>
     <div class="row">
-        <div class='span3 well'>
+        <div class='span4 well'>
             {% for budget in budgets%}
                 <p>
                     <a href="/budget/{{budget.key().id()}}">{{budget.title}} {{budget.year}}</a> {{budget.description}}
@@ -51,13 +51,9 @@
 
             {%endfor%}
         </div><!-- /span4 -->
-        <div class='span3 well'>
+        <div class='span4 well'>
            <p>Перейдя на страницу конкретного бюджета, можно посмотреть подробные расходы, а также найти ссылку на загруженные бюджеты в разные годы(если они есть) и сравнить их между собой</p>
         </div><!-- /span4 -->
-        <div class='span3 well'>
-           <p>Перейдя на страницу конкретного бюджета, можно посмотреть подробные расходы, а также найти ссылку на загруженные бюджеты в разные годы(если они есть) и сравнить их между собой</p>
-        </div><!-- /span4 -->
-
     </div><!-- /row -->
 </div> <!-- /container -->
 <div class='well'>
