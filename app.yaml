@@ -15,6 +15,8 @@ handlers:
   static_dir: js
 - url: /css
   static_dir: css
+- url: /examples
+  static_dir: examples
 - url: /admin/.*
   script: google.appengine.ext.admin.application
   login: admin
