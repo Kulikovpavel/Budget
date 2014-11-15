@@ -3,7 +3,7 @@
 <head>
     <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
     <meta charset="utf-8">
-    <title>Визуализатор бюджетов</title>
+    <title>{% if flag_region %}{{ region.title }} - {% endif %}Визуализатор бюджетов</title>
     <meta name="description" content="сервис визуализации местных бюджетов">
 
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
@@ -15,6 +15,9 @@
 <body>
 <div class='container-fluid'>
     <div>
+        {% if flag_region %}
+            <p><a href = "/">На Главную страницу</a></p>
+        {% endif %}
         <label class="radio inline">
           <input type="radio" name="optionsRadios" id="rublesRadioButton" value="rubles" checked>
           В рублях
@@ -96,23 +99,23 @@
       if(flagPercentRadioButton){
             $("#with_count").prop('disabled', true);  // turn off people counts, useless
             var budget_sum = [];
-            for (i = 0; i < copy_array[0].length; i++) budget_sum.push(0);  // array of zeros
+            for (i = 0; i < copy_array[0].length; i++) budget_sum.push(0);  // array of zeros, by budgets count
 
-            for (i=copy_array.length-1; i>0; i--) {  // without first line
-                for (j = copy_array[0].length - 1; j > 0; j--) { // without last and first - divide by count
+            for (i=copy_array.length-2; i>0; i--) {  // without first and last row
+                for (j = copy_array[0].length - 1; j > 0; j--) { // without last
                     budget_sum[j] = budget_sum[j] + copy_array[i][j]
                 }
             }
-
-            for (i=copy_array.length-1; i>0; i--) {  // without first line
-                for (j = copy_array[0].length - 1; j > 0; j--) { // without last and first - divide by count
-                    copy_array[i][j] = Math.round(100*array[i][j]/budget_sum[j], 4);
+            for (i=copy_array.length-2; i>0; i--) {  // without first and last row
+                for (j = copy_array[0].length - 1; j > 0; j--) { // without first - divide by sum
+                    copy_array[i][j] = Math.round(100 * array[i][j] / budget_sum[j], 4);
                 }
             }
+            copy_array.pop();  // remove last element with people count, in % useless
       } else if($("#with_count").prop("checked")){
             var mun_length = copy_array.length;
-            for (i=copy_array.length-1; i>0; i--) {  // without first line
-                for (j = copy_array[0].length - 1; j > 0; j--) { // without last and first - divide by count
+            for (i=copy_array.length-1; i>0; i--) {  // without first row
+                for (j = copy_array[0].length - 1; j > 0; j--) { // without first - divide by count
                     copy_array[i][j] = Math.round(array[i][j]/array[mun_length-1][j], 4);
                 }
             }

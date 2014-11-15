@@ -91,6 +91,7 @@ class MainHandler(BudgetHandler):
             budgets = Budget.all().ancestor(main_key()).order('-created').fetch(300)
         self.template_values['budgets'] = budgets
         self.template_values['flag_region'] = True if region else False
+        self.template_values['region'] = region
         self.template_values['chart_data'], self.template_values['count_list'] = self.chart_data(budgets)
         template = jinja_environment.get_template('index.html')
         self.response.out.write(template.render(self.template_values))
