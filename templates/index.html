@@ -84,7 +84,7 @@
         });
     }
 
-
+    var categoryPicker;
     function drawChart() {
       // Create and populate the data table.
       var array = {{ chart_data|safe }};
@@ -127,7 +127,9 @@
 
 
       var data = google.visualization.arrayToDataTable(copy_array);
-      var categoryPicker = new google.visualization.ControlWrapper({
+      var old_state = (categoryPicker ? categoryPicker.getState() : undefined);
+
+      categoryPicker = new google.visualization.ControlWrapper({
         'controlType': 'CategoryFilter',
         'containerId': 'control_column',
         'options': {
@@ -144,6 +146,11 @@
             'state': {'selectedValues': ['Общегосударственные вопросы', 'Образование']},
         {% endif %}
       });
+
+      if (old_state){
+          categoryPicker.setState(old_state);
+      };
+
 
 {#      var rowPicker = new google.visualization.ControlWrapper({#}
 {#        'controlType': 'CategoryFilter',#}
@@ -165,7 +172,7 @@
         'containerId': 'chart_div',
         options: {
             height: 1000,
-            vAxis: {title: (flagPercentRadioButton ? "Расходы, в % от бюджета":"Расходы, тыс. р.")},
+            vAxis: {title: (flagPercentRadioButton ? "Расходы, в % от бюджета":"Расходы, тыс. р."), minValue: 0},
             hAxis: {title: "Разделы бюджета"},
             seriesType: "bars"
         }
@@ -174,7 +181,6 @@
       // Create the dashboard.
       var dashboard = new google.visualization.Dashboard(document.getElementById('dashboard')).
         bind(categoryPicker, combochart).  // Configure the category picker to affect the chart
-       // bind(rowPicker, combochart).
         draw(data);  // Draw the dashboard
 }
 </script>
