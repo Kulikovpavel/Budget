@@ -15,9 +15,18 @@
 <body>
 <div class='container-fluid'>
     <div>
-      <label class="checkbox">
-        <input id='with_count' type="checkbox" checked='True'> На человека
-      </label>
+        <label class="radio inline">
+          <input type="radio" name="optionsRadios" id="rublesRadioButton" value="rubles" checked>
+          В рублях
+        </label>
+        <label class="radio inline">
+          <input type="radio" name="optionsRadios" id="percentRadioButton" value="percent">
+          В процентах
+        </label>
+
+        <label class="checkbox">
+          <input id='with_count' type="checkbox" checked='True'> На человека
+        </label>
 {#      <label class="checkbox">#}
 {#        <input id='with_sub' type="checkbox" checked> С учетом субсидий из бюджетов верхнего уровня#}
 {#      </label>#}
@@ -31,17 +40,19 @@
 <div class="container">
     <div></div>
     <div class="row">
-        <div class='span4 well'>
+        <div class='span3 well'>
             {% for budget in budgets%}
                 <p>
                     <a href="/budget/{{budget.key().id()}}">{{budget.title}} {{budget.year}}</a> {{budget.description}}
                 </p>
 
             {%endfor%}
-
         </div><!-- /span4 -->
-        <div class='span4 well'>
-           <p><a href='/upload'>Загрузите</a> бюджет своего поселения или посмотрите загруженные</p>
+        <div class='span3 well'>
+           <p>Перейдя на страницу конкретного бюджета, можно посмотреть подробные расходы, а также найти ссылку на загруженные бюджеты в разные годы(если они есть) и сравнить их между собой</p>
+        </div><!-- /span4 -->
+        <div class='span3 well'>
+           <p>Перейдя на страницу конкретного бюджета, можно посмотреть подробные расходы, а также найти ссылку на загруженные бюджеты в разные годы(если они есть) и сравнить их между собой</p>
         </div><!-- /span4 -->
 
     </div><!-- /row -->
@@ -56,34 +67,57 @@
     google.load("visualization", "1.1", {packages:["controls"]});
     google.setOnLoadCallback(function(){drawChart()});
 
-    $(':checkbox').change(function(){
+    $(":checkbox, :radio").change(function(){
           drawChart();
     });
+
+    var _round = Math.round;  /* redefine to get correct exp round*/
+    Math.round = function(number, decimals /* optional, default 0 */)
+    {
+        if (arguments.length == 1) return _round(number);
+        var multiplier = Math.pow(10, decimals);
+        return _round(number * multiplier) / multiplier;
+    }
+
+    array_sum = function(x) {
+        x.reduce(function(a, b) {
+            return a + b;
+        });
+    }
 
 
     function drawChart() {
       // Create and populate the data table.
       var array = {{ chart_data|safe }};
+      var i, j;
       var copy_array = $.extend(true, [], array);  {# deep copy for future changes #}
+      $("#with_count").prop('disabled', false);
+      var flagPercentRadioButton = $("#percentRadioButton").prop("checked");
+      if(flagPercentRadioButton){
+            $("#with_count").prop('disabled', true);  // turn off people counts, useless
+            var budget_sum = [];
+            for (i = 0; i < copy_array[0].length; i++) budget_sum.push(0);  // array of zeros
 
-      if($("#with_count").prop("checked")){
-            var _round = Math.round;
-            Math.round = function(number, decimals /* optional, default 0 */)
-            {
-              if (arguments.length == 1)
-                return _round(number);
-
-              var multiplier = Math.pow(10, decimals);
-              return _round(number * multiplier) / multiplier;
+            for (i=copy_array.length-1; i>0; i--) {  // without first line
+                for (j = copy_array[0].length - 1; j > 0; j--) { // without last and first - divide by count
+                    budget_sum[j] = budget_sum[j] + copy_array[i][j]
+                }
             }
+
+            for (i=copy_array.length-1; i>0; i--) {  // without first line
+                for (j = copy_array[0].length - 1; j > 0; j--) { // without last and first - divide by count
+                    copy_array[i][j] = Math.round(100*array[i][j]/budget_sum[j], 4);
+                }
+            }
+      } else if($("#with_count").prop("checked")){
             var mun_length = copy_array.length;
-            for (var i=copy_array.length-1; i>0; i--) {  // without first line
-                for (var j = copy_array[0].length - 1; j > 0; j--) { // without last and first - divide by count
+            for (i=copy_array.length-1; i>0; i--) {  // without first line
+                for (j = copy_array[0].length - 1; j > 0; j--) { // without last and first - divide by count
                     copy_array[i][j] = Math.round(array[i][j]/array[mun_length-1][j], 4);
                 }
             }
       }
-{#              google.visualization.arrayToDataTable([#}
+{#       google.visualization.arrayToDataTable([#}
 {#        ['Month', 'Bolivia', 'Ecuador', 'Madagascar', 'Papua New Guinea', 'Rwanda', 'Average'],#}
 {#        ['2004/05',  165,      938,         522,             998,           450,      614.6],#}
 {#        ['2005/06',  135,      1120,        599,             1268,          288,      682],#}
@@ -107,7 +141,9 @@
           }
         },
         // Define an initial state, i.e. a set of metrics to be initially selected.
-        'state': {'selectedValues': ['Общегосударственные вопросы', 'Образование']}
+        {% if not flag_region %}
+            'state': {'selectedValues': ['Общегосударственные вопросы', 'Образование']},
+        {% endif %}
       });
 
 {#      var rowPicker = new google.visualization.ControlWrapper({#}
@@ -130,7 +166,7 @@
         'containerId': 'chart_div',
         options: {
             height: 1000,
-            vAxis: {title: "Расходы, тыс. р."},
+            vAxis: {title: (flagPercentRadioButton ? "Расходы, в % от бюджета":"Расходы, тыс. р.")},
             hAxis: {title: "Разделы бюджета"},
             seriesType: "bars"
         }

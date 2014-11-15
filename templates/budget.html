@@ -25,6 +25,11 @@
         <br>
         <a href = "/">На Главную страницу</a>
     </p>
+    {% if budget.region.budgets.count() > 1 %}
+        <p>
+            <a href = "/?region={{ budget.region.key().id() }}">Все бюджеты данного поселения за все годы - {{ budget.region.budgets.count() }}</a>
+        </p>
+    {% endif %}
 
     <div>
       <label class="checkbox">

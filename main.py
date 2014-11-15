@@ -80,8 +80,17 @@ class BudgetHandler(webapp2.RequestHandler):
 
 class MainHandler(BudgetHandler):
     def get(self):
-        budgets = Budget.all().ancestor(main_key()).order('-created').fetch(300)
+        region_id = self.request.get('region')
+        if region_id:
+            region = Region.by_id(region_id)
+        else:
+            region = None
+        if region:
+            budgets = Budget.all().ancestor(main_key()).filter('region =', region).order('year').fetch(300)
+        else:
+            budgets = Budget.all().ancestor(main_key()).order('-created').fetch(300)
         self.template_values['budgets'] = budgets
+        self.template_values['flag_region'] = True if region else False
         self.template_values['chart_data'], self.template_values['count_list'] = self.chart_data(budgets)
         template = jinja_environment.get_template('index.html')
         self.response.out.write(template.render(self.template_values))

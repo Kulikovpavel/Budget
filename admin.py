@@ -5,6 +5,11 @@ import logging
 from models import *
 
 
+# !!! Important !!!
+# to add regions in test base run this in admin console
+#   import admin
+#   admin.add_tasks_regions()
+
 def add_tasks_regions():
     json_file = 'json/peoples.json'
     with open(json_file) as json_data:

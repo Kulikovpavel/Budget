@@ -16,6 +16,12 @@ indexes:
   - name: created
     direction: desc
 
+- kind: Budget
+  ancestor: yes
+  properties:
+  - name: region
+  - name: year
+
 - kind: BudgetLine
   properties:
   - name: budget
