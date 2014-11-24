@@ -3,7 +3,7 @@
 <head>
     <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
     <meta charset="utf-8">
-    <title>{{budget.title}} {{budget.year}} - Визуализатор бюджетов</title>
+    <title>{{budget.get_title()}} - Визуализатор бюджетов</title>
     <meta name="description" content=" {{budget.title}}, {{budget.year}}, бюджет, сервис визуализации местных бюджетов">
 
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
@@ -15,7 +15,7 @@
 <body>
 <div class="container">
 
-    <h1>{{budget.title}} {{budget.year}}</h1>
+    <h1>{{budget.get_title()}}</h1>
     <p>
         {% if budget.link %}
             <a href="{{ budget.link }}">Источник бюджета, ссылка на сайт муниципального образования</a>
@@ -139,7 +139,7 @@
         data = google.visualization.arrayToDataTable(level, true);
 
         var options = {
-          title: '{{budget.title}} {{budget.year}} , расходы бюджета, цифры в тыс.р., общие расходы: ' + correct_sum.toFixed(2) + delta_message
+          title: '{{budget.get_title()}} , расходы бюджета, цифры в тыс.р., общие расходы: ' + correct_sum.toFixed(2) + delta_message
         };
 
         chart = new google.visualization.PieChart(document.getElementById('chart_div'));

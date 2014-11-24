@@ -37,7 +37,7 @@ class BudgetHandler(webapp2.RequestHandler):
         return json.dumps(zero_level)
 
     def chart_data(self, budgets):
-        names_list = [line.title+" "+str(line.year) for line in budgets]
+        names_list = [line.get_title() for line in budgets]
         count_list = [budget.region.count(budget.year) for budget in budgets]
         first_line = ["Раздел"] + names_list
         result = [] + [first_line]
@@ -86,7 +86,7 @@ class MainHandler(BudgetHandler):
         else:
             region = None
         if region:
-            budgets = Budget.all().ancestor(main_key()).filter('region =', region).order('year').fetch(300)
+            budgets = Budget.all().ancestor(main_key()).filter('region =', region).order('year').order('flag_changes').fetch(300)
         else:
             budgets = Budget.all().ancestor(main_key()).order('-created').fetch(300)
         self.template_values['budgets'] = budgets
@@ -117,6 +117,7 @@ class BudgetPageHandler(BudgetHandler):
         excel_table = self.request.get('excel_table')
         link = self.request.get('link')
         year = int(self.request.get('year'))
+        flag_changes = bool(self.request.get('flag_changes'))
         password = self.request.get('password')
 
         region = self.request.get('region')
@@ -143,7 +144,7 @@ class BudgetPageHandler(BudgetHandler):
         lines = excel_table.split('\n')
         table = [[word if word != "" else "0" for word in line.split('\t')] for line in lines if line != ""]
         if len(table) > 2 and len(table[0]) > 2:
-            budget = Budget.all().filter('region =', region).filter('year =', year).get()
+            budget = Budget.all().filter('region =', region).filter('year =', year).filter('flag_changes =', flag_changes).get()
             if not budget:
                 budget = Budget(title=region.title,
                                 region=region,
@@ -152,6 +153,7 @@ class BudgetPageHandler(BudgetHandler):
                                 year=year,
                                 type='rashod',
                                 link=link,
+                                flag_changes=flag_changes,
                                 parent=main_key())
                 budget.put()
             else:

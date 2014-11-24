@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from google.appengine.ext import db
 import json
 from helpers import *
@@ -92,8 +94,13 @@ class Budget(db.Model):
     user = db.ReferenceProperty(User, collection_name='budgets')
     year = db.IntegerProperty()
     created = db.DateTimeProperty(auto_now_add=True)
+    flag_changes = db.BooleanProperty(default=False)
     type = db.StringProperty()
     link = db.StringProperty()
+
+
+    def get_title(self):
+        return "%s %s %s" % (self.title, self.year, u"с изменениями" if self.flag_changes else "")
 
     @classmethod
     def by_id(cls, uid):

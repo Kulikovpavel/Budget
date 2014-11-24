@@ -46,7 +46,7 @@
         <div class='span4 well'>
             {% for budget in budgets%}
                 <p>
-                    <a href="/budget/{{budget.key().id()}}">{{budget.title}} {{budget.year}}</a> {{budget.description}}
+                    <a href="/budget/{{budget.key().id()}}">{{budget.get_title()}}</a> {{budget.description}}
                 </p>
 
             {%endfor%}
