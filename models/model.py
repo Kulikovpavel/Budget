@@ -88,7 +88,7 @@ class RegionCount(db.Model):
 
 class Budget(db.Model):
     title = db.StringProperty()
-    password = db.TextProperty()
+    password = db.StringProperty()
     region = db.ReferenceProperty(Region, collection_name='budgets')
     table = JsonProperty()
     user = db.ReferenceProperty(User, collection_name='budgets')
